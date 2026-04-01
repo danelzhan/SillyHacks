@@ -1,7 +1,9 @@
 (function () {
+  const EMIT_WINDOW_MS = 250;
+  const GESTURE_IDLE_MS = 120;
   let scrollCount = 0;
   let timerStarted = false;
-  let lastUrl = window.location.href;
+  let lastWheelAt = 0;
 
   function bucketFromRate(rate) {
     if (rate >= 30) return "high";
@@ -10,38 +12,51 @@
   }
 
   function emit() {
-    const perMinute = scrollCount;
+    if (scrollCount <= 0) return;
+    if (Date.now() - lastWheelAt < GESTURE_IDLE_MS) return;
+
+    const perMinute = Math.round((scrollCount * 60 * 1000) / EMIT_WINDOW_MS);
+    if (perMinute <= 0) {
+      scrollCount = 0;
+      return;
+    }
+
     const payload = {
       type: "reels_scroll_signal",
       url: window.location.href,
       perMinute,
       bucket: bucketFromRate(perMinute)
     };
-    chrome.runtime.sendMessage(payload);
+
+    // Content scripts can outlive extension reloads; swallow invalidated-context errors.
+    try {
+      chrome.runtime.sendMessage(payload, () => {
+        if (chrome.runtime.lastError) {
+          // No-op: extension worker may be restarting or context invalidated.
+        }
+      });
+    } catch {
+      // No-op: extension context invalidated.
+    }
     scrollCount = 0;
   }
 
   function start() {
     if (timerStarted) return;
     timerStarted = true;
-    setInterval(emit, 60 * 1000);
+    setInterval(emit, EMIT_WINDOW_MS);
   }
 
   window.addEventListener(
     "wheel",
-    () => {
-      if (!window.location.href.includes("instagram.com")) return;
+    (event) => {
+      if (!window.location.href.includes("/reels")) return;
+      if (Math.abs(Number(event.deltaY ?? 0)) < 1) return;
       scrollCount += 1;
+      lastWheelAt = Date.now();
     },
     { passive: true }
   );
-
-  setInterval(() => {
-    if (window.location.href !== lastUrl) {
-      lastUrl = window.location.href;
-      if (lastUrl.includes("/reels")) scrollCount += 3;
-    }
-  }, 1500);
 
   start();
 })();

@@ -1,28 +1,29 @@
-const healthValueEl = document.getElementById("healthValue");
-const healthFillEl = document.getElementById("healthFill");
-const petStatusEl = document.getElementById("petStatus");
 const backendStatusEl = document.getElementById("backendStatus");
 const eventListEl = document.getElementById("eventList");
+const clearEventsBtn = document.getElementById("clearEventsBtn");
+const sidebarEnabledEl = document.getElementById("sidebarEnabled");
+const trackTabActivityEl = document.getElementById("trackTabActivity");
+const trackIdleHeartbeatEl = document.getElementById("trackIdleHeartbeat");
+const trackReelsScrollEl = document.getElementById("trackReelsScroll");
+const API_BASES = ["http://127.0.0.1:8787/api", "http://localhost:8787/api"];
 
-function healthColor(health) {
-  if (health <= 20) return "#ef4444";
-  if (health <= 50) return "#f59e0b";
-  return "#38bdf8";
-}
-
-function renderPet(pet) {
-  if (!pet) {
-    healthValueEl.textContent = "--";
-    petStatusEl.textContent = "Status: unknown";
-    healthFillEl.style.width = "0%";
-    return;
+async function checkBackendOnline() {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "backend_health_ping" });
+    if (response && typeof response.online === "boolean") return response.online;
+  } catch {
+    // Fallback to direct fetch checks below.
   }
 
-  const health = Math.max(0, Math.min(100, Number(pet.health ?? 0)));
-  healthValueEl.textContent = `${health}`;
-  petStatusEl.textContent = `Status: ${pet.status}`;
-  healthFillEl.style.width = `${health}%`;
-  healthFillEl.style.background = healthColor(health);
+  for (const base of API_BASES) {
+    try {
+      const response = await fetch(`${base}/health`);
+      if (response.ok) return true;
+    } catch {
+      // try next base
+    }
+  }
+  return false;
 }
 
 function renderEvents(events) {
@@ -43,17 +44,44 @@ function renderEvents(events) {
 
 async function refresh() {
   const state = await chrome.storage.local.get({
-    pet: null,
     recentEvents: [],
-    backendOnline: false
+    backendOnline: false,
+    sidebarEnabled: true,
+    trackTabActivity: true,
+    trackIdleHeartbeat: true,
+    trackReelsScroll: true
   });
-  renderPet(state.pet);
+  const liveBackendOnline = await checkBackendOnline();
   renderEvents(state.recentEvents);
-  backendStatusEl.textContent = `Backend: ${state.backendOnline ? "online" : "offline"}`;
+  const backendOnline = Boolean(liveBackendOnline || state.backendOnline);
+  backendStatusEl.textContent = `Backend: ${backendOnline ? "online" : "offline"}`;
+  sidebarEnabledEl.checked = Boolean(state.sidebarEnabled);
+  trackTabActivityEl.checked = Boolean(state.trackTabActivity);
+  trackIdleHeartbeatEl.checked = Boolean(state.trackIdleHeartbeat);
+  trackReelsScrollEl.checked = Boolean(state.trackReelsScroll);
 }
+
+function bindToggle(element, key) {
+  element.addEventListener("change", async () => {
+    await chrome.storage.local.set({ [key]: element.checked });
+  });
+}
+
+bindToggle(sidebarEnabledEl, "sidebarEnabled");
+bindToggle(trackTabActivityEl, "trackTabActivity");
+bindToggle(trackIdleHeartbeatEl, "trackIdleHeartbeat");
+bindToggle(trackReelsScrollEl, "trackReelsScroll");
+
+clearEventsBtn.addEventListener("click", async () => {
+  await chrome.storage.local.set({ recentEvents: [] });
+  renderEvents([]);
+});
 
 chrome.storage.onChanged.addListener(() => {
   refresh();
 });
 
 refresh();
+setInterval(() => {
+  refresh();
+}, 1000);

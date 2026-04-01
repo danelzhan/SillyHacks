@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "A Tamagotchi that dies if you stop scrolling.",
   "permissions": ["tabs", "storage", "scripting"],
-  "host_permissions": ["http://localhost:8787/*", "https://www.instagram.com/*"],
+  "host_permissions": [
+    "http://localhost:8787/*",
+    "http://127.0.0.1:8787/*",
+    "https://www.instagram.com/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },

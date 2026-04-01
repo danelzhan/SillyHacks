@@ -41,20 +41,21 @@ export function getHealthDeltaForEvent(event) {
   if (!event) return 0;
 
   if (event.type === EVENT_TYPES.REELS_SCROLL) {
-    const bucket = event.meta?.bucket ?? "low";
-    if (bucket === "high") return 2;
-    if (bucket === "medium") return 2;
-    return 1;
+    const perMinute = Math.max(0, Number(event.meta?.perMinute ?? 0));
+    if (perMinute <= 0) return 0;
+    return 4;
   }
 
   if (event.type === EVENT_TYPES.TAB_ACTIVE) {
-    if (event.domainClass === DOMAIN_CLASS.BAD) return 2;
+    // Non-scroll events must never increase score/health.
+    if (event.domainClass === DOMAIN_CLASS.BAD) return 0;
     if (event.domainClass === DOMAIN_CLASS.GOOD) return -2;
     return -1;
   }
 
   if (event.type === EVENT_TYPES.IDLE_TICK) {
-    if (event.domainClass === DOMAIN_CLASS.BAD) return 1;
+    // Non-scroll events must never increase score/health.
+    if (event.domainClass === DOMAIN_CLASS.BAD) return 0;
     if (event.domainClass === DOMAIN_CLASS.GOOD) return -2;
     return -1;
   }

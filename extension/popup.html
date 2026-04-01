@@ -10,15 +10,27 @@
     <main>
       <h1>Scrollagotchi</h1>
       <p id="backendStatus">Backend: checking...</p>
-      <div class="card">
-        <p class="label">Health</p>
-        <p id="healthValue">--</p>
-        <div class="bar">
-          <div id="healthFill"></div>
-        </div>
-        <p id="petStatus">Status: --</p>
-      </div>
+      <section class="card">
+        <h2>Config</h2>
+        <label class="row">
+          <input id="sidebarEnabled" type="checkbox" />
+          <span>Show health sidebar</span>
+        </label>
+        <label class="row">
+          <input id="trackTabActivity" type="checkbox" />
+          <span>Track tab active events</span>
+        </label>
+        <label class="row">
+          <input id="trackIdleHeartbeat" type="checkbox" />
+          <span>Track idle heartbeat events</span>
+        </label>
+        <label class="row">
+          <input id="trackReelsScroll" type="checkbox" />
+          <span>Track Reels scroll events</span>
+        </label>
+      </section>
       <h2>Recent events</h2>
+      <button id="clearEventsBtn" class="ghost" type="button">Clear logs</button>
       <ul id="eventList"></ul>
     </main>
     <script src="popup.js"></script>

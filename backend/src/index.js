@@ -14,12 +14,6 @@ const PORT = Number(process.env.PORT ?? 8787);
 const EVENT_LOG_LIMIT = Number(process.env.EVENT_LOG_LIMIT ?? 500);
 const STORE_FULL_URL = (process.env.STORE_FULL_URL ?? "false").toLowerCase() === "true";
 
-const engine = createPetEngine({
-  allowRevive: (process.env.ALLOW_REVIVE ?? "true").toLowerCase() === "true",
-  decayTickSeconds: Number(process.env.DECAY_TICK_SECONDS ?? 1),
-  initialHealth: Number(process.env.INITIAL_HEALTH ?? 50)
-});
-
 const store = createEventStore(EVENT_LOG_LIMIT);
 const notifier = createTwilioNotifier();
 const app = express();
@@ -28,6 +22,53 @@ app.use(express.json({ limit: "1mb" }));
 
 const server = createServer(app);
 const wsHub = createWsHub(server);
+
+let engine;
+
+function triggerSpriteThresholdNotification(change) {
+  void (async () => {
+    const pet = engine?.getState?.() ?? null;
+    const triggerEvent = change.triggerEvent ?? null;
+    const note = `Sprite changed from ${change.previousSpriteTier} to ${change.nextSpriteTier}.`;
+
+    try {
+      const result = await notifier.sendStatusNotification({
+        pet,
+        event: triggerEvent,
+        note
+      });
+
+      if (!result.configured || !result.sent) return;
+
+      const notificationEvent = {
+        type: "status_notification_sent",
+        timestamp: new Date().toISOString(),
+        source: "backend",
+        domain: triggerEvent?.domain ?? "",
+        meta: {
+          note,
+          sid: result.sid ?? null,
+          trigger: "sprite_threshold",
+          previousSpriteTier: change.previousSpriteTier,
+          nextSpriteTier: change.nextSpriteTier,
+          health: change.health
+        }
+      };
+
+      store.add(notificationEvent);
+      wsHub.broadcast({ type: "event", payload: notificationEvent });
+    } catch (error) {
+      console.error("Failed to send sprite-threshold Twilio notification:", error);
+    }
+  })();
+}
+
+engine = createPetEngine({
+  allowRevive: (process.env.ALLOW_REVIVE ?? "true").toLowerCase() === "true",
+  decayTickSeconds: Number(process.env.DECAY_TICK_SECONDS ?? 1),
+  initialHealth: Number(process.env.INITIAL_HEALTH ?? 50),
+  onSpriteThresholdChange: triggerSpriteThresholdNotification
+});
 
 wsHub.attachBootstrap(() => ({
   pet: engine.getState(),

@@ -1,5 +1,6 @@
 import { EVENT_TYPES, PET_STATUS } from "./constants.js";
 import { classifyDomain, getDecayDelta, getHealthDeltaForEvent } from "./scoring.js";
+import { getSpriteTierForHealth } from "./sprite.js";
 
 function clampHealth(value) {
   return Math.max(0, Math.min(100, value));
@@ -23,6 +24,7 @@ export function createPetEngine(config = {}) {
   const state = {
     health: clampHealth(initialHealth),
     status: statusFromHealth(initialHealth),
+    spriteTier: getSpriteTierForHealth(initialHealth),
     lastFeedAt: nowIso(),
     lastEventAt: nowIso(),
     createdAt: nowIso()
@@ -65,14 +67,30 @@ export function createPetEngine(config = {}) {
     }
   }
 
-  function applyDelta(delta, eventCollector) {
+  function applyDelta(delta, eventCollector, triggerEvent = null) {
     const previousStatus = state.status;
+    const previousSpriteTier = state.spriteTier;
     state.health = clampHealth(state.health + delta);
     state.lastEventAt = nowIso();
     const nextStatus = statusFromHealth(state.health);
+    const nextSpriteTier = getSpriteTierForHealth(state.health);
 
     if (previousStatus === PET_STATUS.DEAD && delta <= 0) return;
     transitionStatus(nextStatus, eventCollector);
+
+    if (previousSpriteTier !== nextSpriteTier) {
+      state.spriteTier = nextSpriteTier;
+      if (typeof config.onSpriteThresholdChange === "function") {
+        config.onSpriteThresholdChange({
+          previousSpriteTier,
+          nextSpriteTier,
+          health: state.health,
+          status: state.status,
+          timestamp: nowIso(),
+          triggerEvent
+        });
+      }
+    }
   }
 
   function ingest(rawEvent, eventCollector) {
@@ -90,20 +108,21 @@ export function createPetEngine(config = {}) {
     const delta = getHealthDeltaForEvent(event);
     if (delta > 0) state.lastFeedAt = nowIso();
 
-    applyDelta(delta, eventCollector);
+    applyDelta(delta, eventCollector, event);
     return event;
   }
 
   function decay(eventCollector) {
     if (!allowRevive && state.status === PET_STATUS.DEAD) return;
     const delta = getDecayDelta();
-    applyDelta(delta, eventCollector);
-    return {
+    const decayEvent = {
       type: EVENT_TYPES.DECAY_TICK,
       timestamp: nowIso(),
       source: "engine",
       meta: { delta }
     };
+    applyDelta(delta, eventCollector, decayEvent);
+    return decayEvent;
   }
 
   return {

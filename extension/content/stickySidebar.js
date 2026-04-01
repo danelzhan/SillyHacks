@@ -2,11 +2,22 @@
   if (window.top !== window) return;
 
   const TOTAL_SEGS = 10;
+  const SPRITE_THRESHOLDS = [
+    { min: 81, img: "dog_happy.png" },
+    { min: 61, img: "dog_sleep.png" },
+    { min: 41, img: "dog_confused.png" },
+    { min: 21, img: "dogtear.png" },
+    { min: 1,  img: "dogghost.png" },
+    { min: 0,  img: "dogdead.png" },
+  ];
+
   let segEls = [];
   let healthValEl = null;
   let msgEl = null;
+  let spriteEl = null;
   let sidebarEl = null;
   let mounted = false;
+  let currentSprite = null;
 
   let pet = null;
   let recentEvents = [];
@@ -80,12 +91,18 @@
           margin-left: auto; white-space: nowrap;
         }
         #sg-sidebar .sg-viewport {
-          margin-top: 6px; height: 80px; background: #e8e4d4;
+          margin-top: 6px; height: 100px; background: #e8e4d4;
           border: 2px solid #2a4f52; border-radius: 6px;
+          display: flex; align-items: center; justify-content: center;
+          overflow: hidden;
           background-image: repeating-linear-gradient(
             0deg, transparent, transparent 3px,
             rgba(0,0,0,.03) 3px, rgba(0,0,0,.03) 4px
           );
+        }
+        #sg-sidebar .sg-sprite {
+          max-width: 90%; max-height: 90%; image-rendering: pixelated;
+          transition: opacity .3s ease;
         }
         #sg-sidebar .sg-msg {
           margin-top: 6px; background: #fff; border: 2px solid #2a4f52;
@@ -112,7 +129,7 @@
             <div class="sg-segs">${segsHTML}</div>
             <span class="sg-val" id="sg-health-val">--</span>
           </div>
-          <div class="sg-viewport"></div>
+          <div class="sg-viewport"><img class="sg-sprite" id="sg-sprite" src="" alt="pet" /></div>
           <div class="sg-msg" id="sg-msg">connecting...</div>
         </div></div>
       </div>
@@ -122,6 +139,7 @@
     sidebarEl = document.getElementById("sg-sidebar");
     healthValEl = document.getElementById("sg-health-val");
     msgEl = document.getElementById("sg-msg");
+    spriteEl = document.getElementById("sg-sprite");
     segEls = [];
     for (let i = 0; i < TOTAL_SEGS; i++) segEls.push(document.getElementById(`sg-seg-${i}`));
     document.getElementById("sg-toggle").addEventListener("click", () => {
@@ -158,11 +176,31 @@
     }, 30);
   }
 
+  function getSpriteFile(health) {
+    for (const t of SPRITE_THRESHOLDS) {
+      if (health >= t.min) return t.img;
+    }
+    return "dogdead.png";
+  }
+
+  function updateSprite(health) {
+    const file = getSpriteFile(health);
+    if (file === currentSprite) return;
+    currentSprite = file;
+    const url = chrome.runtime.getURL(`assets/${file}`);
+    spriteEl.style.opacity = "0";
+    setTimeout(() => {
+      spriteEl.src = url;
+      spriteEl.style.opacity = "1";
+    }, 150);
+  }
+
   function render() {
     mount();
     const health = Math.max(0, Math.min(100, Number(pet?.health ?? 0)));
     renderBar(health);
     animateHealth(health);
+    updateSprite(health);
     msgEl.textContent = buildMessage();
   }
 

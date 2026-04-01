@@ -1,6 +1,17 @@
 const API_BASES = ["http://127.0.0.1:8787/api", "http://localhost:8787/api"];
 
+const SPRITE_THRESHOLDS = [
+  { min: 81, img: "assets/dog_happy.png" },
+  { min: 61, img: "assets/dog_sleep.png" },
+  { min: 41, img: "assets/dog_confused.png" },
+  { min: 21, img: "assets/dogtear.png" },
+  { min: 1,  img: "assets/dogghost.png" },
+  { min: 0,  img: "assets/dogdead.png" },
+];
+let currentSprite = null;
+
 const statusBadge = document.getElementById("statusBadge");
+const petSpriteEl = document.getElementById("petSprite");
 const eventListEl = document.getElementById("eventList");
 const clearEventsBtn = document.getElementById("clearEventsBtn");
 const testTwilioBtn = document.getElementById("testTwilioBtn");
@@ -84,11 +95,24 @@ chrome.storage.local.get({
   trackReelsScrollEl.checked = Boolean(cfg.trackReelsScroll);
 });
 
+function updatePopupSprite(health) {
+  const h = Math.max(0, Math.min(100, Number(health ?? 0)));
+  let file = "assets/dogdead.png";
+  for (const t of SPRITE_THRESHOLDS) {
+    if (h >= t.min) { file = t.img; break; }
+  }
+  if (file !== currentSprite) {
+    currentSprite = file;
+    petSpriteEl.src = file;
+  }
+}
+
 // Live state from background via port
 const port = chrome.runtime.connect({ name: "sidebar" });
 port.onMessage.addListener((msg) => {
   if (msg.type === "state") {
     renderStatus(msg.backendOnline);
     renderEvents(msg.recentEvents ?? []);
+    updatePopupSprite(msg.pet?.health);
   }
 });

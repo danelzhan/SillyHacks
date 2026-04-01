@@ -25,7 +25,10 @@ export function createEventsRouter({ store, engine, wsHub, storeFullUrl }) {
       source: payload.source ?? "extension",
       domain: payload.domain ?? "",
       url: storeFullUrl ? payload.url ?? "" : "",
-      meta: payload.meta ?? {}
+      meta: {
+        ...(payload.meta ?? {}),
+        pageUrl: payload.url ?? ""
+      }
     };
 
     const normalized = engine.ingest(event, (sideEvent) => {

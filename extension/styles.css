@@ -96,6 +96,17 @@ body {
   height: 13px;
 }
 
+.twilio-row {
+  justify-content: space-between;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: #e8e4d4;
+}
+
+.twilio-toggle-text {
+  flex: 1;
+}
+
 .clear-btn {
   font-family: 'Silkscreen', monospace;
   font-size: 7px;
@@ -114,6 +125,16 @@ body {
   margin-top: 4px;
   font-size: 7px;
   color: #64748b;
+}
+
+.summary-text {
+  font-size: 8px;
+  line-height: 1.5;
+  color: #1e293b;
+  background: #e8e4d4;
+  border-radius: 4px;
+  padding: 6px;
+  min-height: 42px;
 }
 
 .event-list {

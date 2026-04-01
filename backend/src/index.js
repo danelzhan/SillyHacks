@@ -8,6 +8,8 @@ import { createEventsRouter } from "./routes/events.js";
 import { createNotificationsRouter } from "./routes/notifications.js";
 import { createPetRouter } from "./routes/pet.js";
 import { createWsHub } from "./ws/hub.js";
+import { createGeminiHelper } from "./services/geminiHelper.js";
+import { createPetNarrator } from "./services/petNarrator.js";
 import { createTwilioNotifier } from "./services/twilioNotifier.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -16,6 +18,8 @@ const STORE_FULL_URL = (process.env.STORE_FULL_URL ?? "false").toLowerCase() ===
 
 const store = createEventStore(EVENT_LOG_LIMIT);
 const notifier = createTwilioNotifier();
+const gemini = createGeminiHelper();
+const narrator = createPetNarrator({ gemini });
 const app = express();
 app.use(cors({ origin: true, credentials: false }));
 app.use(express.json({ limit: "1mb" }));
@@ -35,7 +39,13 @@ function triggerSpriteThresholdNotification(change) {
       const result = await notifier.sendStatusNotification({
         pet,
         event: triggerEvent,
-        note
+        note,
+        body: (await narrator.generateTwilioMessage({
+          pet,
+          event: triggerEvent,
+          currentUrl: triggerEvent?.meta?.pageUrl ?? triggerEvent?.url ?? "",
+          note
+        })).text
       });
 
       if (!result.configured || !result.sent) return;
@@ -98,11 +108,12 @@ app.use(
   createNotificationsRouter({
     engine,
     notifier,
+    narrator,
     store,
     wsHub
   })
 );
-app.use("/api/pet", createPetRouter({ engine }));
+app.use("/api/pet", createPetRouter({ engine, narrator, store, wsHub }));
 
 const DECAY_MS = engine.config.decayTickSeconds * 1000;
 let nextDecay = Date.now() + DECAY_MS;

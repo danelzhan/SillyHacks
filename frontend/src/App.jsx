@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEvents, getHealth, getPet, sendStatusNotification } from "./lib/api.js";
+import { getEvents, getHealth, getPet, getPetSummary, restartPet, sendStatusNotification } from "./lib/api.js";
 import { connectWs } from "./lib/ws.js";
 
 function HealthBar({ health }) {
@@ -63,6 +63,8 @@ export default function App() {
   const [backendOnline, setBackendOnline] = useState(false);
   const [error, setError] = useState("");
   const [smsState, setSmsState] = useState({ sending: false, message: "" });
+  const [restartState, setRestartState] = useState({ sending: false, message: "" });
+  const [summary, setSummary] = useState("connecting...");
 
   useEffect(() => {
     let cancelled = false;
@@ -119,6 +121,26 @@ export default function App() {
     return () => socket.close();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSummary() {
+      try {
+        const payload = await getPetSummary();
+        if (!cancelled) {
+          setSummary(payload.item?.summary ?? "No summary available.");
+        }
+      } catch (err) {
+        if (!cancelled) setSummary(err?.message ?? "Failed to load summary.");
+      }
+    }
+
+    loadSummary();
+    return () => {
+      cancelled = true;
+    };
+  }, [pet?.health, pet?.status, events[0]?.timestamp]);
+
   const health = Math.max(0, Math.min(100, Number(pet?.health ?? 0)));
   const latestEvent = events[0] ?? null;
   const message = buildMessage(pet, latestEvent);
@@ -130,6 +152,18 @@ export default function App() {
       setSmsState({ sending: false, message: "SMS sent." });
     } catch (err) {
       setSmsState({ sending: false, message: err?.message ?? "Failed." });
+    }
+  }
+
+  async function handleRestartPet() {
+    setRestartState({ sending: true, message: "" });
+    try {
+      const payload = await restartPet();
+      setPet(payload.item ?? null);
+      setRestartState({ sending: false, message: "Restarted to 50%." });
+      setSummary("I'm back at 50%. Feed me some scrolls.");
+    } catch (err) {
+      setRestartState({ sending: false, message: err?.message ?? "Failed." });
     }
   }
 
@@ -164,6 +198,15 @@ export default function App() {
               <MessageBox message={message} />
             </div>
 
+            <div className="mt-3 rounded-lg border-2 border-shell-bezel bg-white px-4 py-3">
+              <p className="mb-1 text-[8px] font-bold uppercase tracking-wider text-shell-bezel">
+                Pet Summary
+              </p>
+              <p className="min-h-[2.5rem] text-[10px] leading-relaxed">
+                {summary || "\u00A0"}
+              </p>
+            </div>
+
             <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
@@ -175,6 +218,20 @@ export default function App() {
               </button>
               {smsState.message && (
                 <span className="text-[8px] text-shell-bezel">{smsState.message}</span>
+              )}
+            </div>
+
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRestartPet}
+                disabled={!backendOnline || restartState.sending}
+                className="rounded border-2 border-shell-bezel bg-[#f8c4c0] px-3 py-1 text-[9px] font-bold text-shell-bezel disabled:opacity-50"
+              >
+                {restartState.sending ? "Restarting..." : "Restart Pet"}
+              </button>
+              {restartState.message && (
+                <span className="text-[8px] text-shell-bezel">{restartState.message}</span>
               )}
             </div>
 

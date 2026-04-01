@@ -195,7 +195,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       timestamp: message.timestamp ?? new Date().toISOString(),
       source: "extension_content",
       url: message.url ?? "",
-      domain: message.domain ?? "instagram.com",
+      domain: message.domain ?? getDomain(message.url ?? "") ?? "instagram.com",
       meta: {}
     })
       .then(() => sendResponse({ ok: true }))

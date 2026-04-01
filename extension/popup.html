@@ -24,6 +24,21 @@
           <img id="petSprite" src="assets/dog_happy.png" alt="pet" style="max-width:90%;max-height:100px;image-rendering:pixelated;" />
         </div>
 
+        <!-- summary -->
+        <div class="panel" style="margin-top:6px">
+          <div class="panel-header">
+            <div class="panel-title">Pet Summary</div>
+            <button id="refreshSummaryBtn" class="clear-btn" type="button">refresh</button>
+          </div>
+          <p id="petSummary" class="summary-text">Loading summary...</p>
+        </div>
+
+        <div class="panel" style="margin-top:6px">
+          <div class="panel-title">Pet Controls</div>
+          <button id="restartPetBtn" class="clear-btn" type="button">Restart Pet</button>
+          <p id="restartStatus" class="twilio-status">Resets to 50% health.</p>
+        </div>
+
         <!-- config -->
         <div class="panel">
           <div class="panel-title">Config</div>
@@ -44,6 +59,10 @@
         <!-- twilio -->
         <div class="panel" style="margin-top:6px">
           <div class="panel-title">Twilio</div>
+          <label class="config-row twilio-row">
+            <input id="twilioArmedToggle" type="checkbox" />
+            <span class="twilio-toggle-text">Arm status SMS</span>
+          </label>
           <button id="testTwilioBtn" class="clear-btn" type="button">Test SMS</button>
           <p id="twilioStatus" class="twilio-status">Ready to test.</p>
         </div>

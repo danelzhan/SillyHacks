@@ -11,7 +11,8 @@ export const EVENT_TYPES = {
   DECAY_TICK: "decay_tick",
   CRITICAL_ENTERED: "critical_entered",
   REVIVED: "revived",
-  DIED: "died"
+  DIED: "died",
+  RESTARTED: "restarted"
 };
 
 export const DOMAIN_CLASS = {

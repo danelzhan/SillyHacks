@@ -36,3 +36,15 @@ export async function sendStatusNotification(note = "") {
     body: JSON.stringify({ note })
   });
 }
+
+export async function getPetSummary(url = "") {
+  const suffix = url ? `?url=${encodeURIComponent(url)}` : "";
+  return requestWithFallback(`/pet/summary${suffix}`);
+}
+
+export async function restartPet() {
+  return requestWithFallback("/pet/restart", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  });
+}

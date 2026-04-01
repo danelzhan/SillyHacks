@@ -125,10 +125,56 @@ export function createPetEngine(config = {}) {
     return decayEvent;
   }
 
+  function restart(eventCollector) {
+    const previousSpriteTier = state.spriteTier;
+    const previousStatus = state.status;
+    state.health = 50;
+    state.status = PET_STATUS.ALIVE;
+    state.spriteTier = getSpriteTierForHealth(state.health);
+    state.lastFeedAt = nowIso();
+    state.lastEventAt = nowIso();
+
+    if (previousStatus === PET_STATUS.DEAD) {
+      eventCollector({
+        type: EVENT_TYPES.REVIVED,
+        timestamp: nowIso(),
+        source: "engine",
+        meta: { previousStatus }
+      });
+    }
+
+    if (previousSpriteTier !== state.spriteTier) {
+      eventCollector({
+        type: EVENT_TYPES.RESTARTED,
+        timestamp: nowIso(),
+        source: "engine",
+        meta: {
+          previousStatus,
+          previousSpriteTier,
+          nextSpriteTier: state.spriteTier,
+          health: state.health
+        }
+      });
+    }
+
+    return {
+      type: EVENT_TYPES.RESTARTED,
+      timestamp: nowIso(),
+      source: "engine",
+      meta: {
+        previousStatus,
+        previousSpriteTier,
+        nextSpriteTier: state.spriteTier,
+        health: state.health
+      }
+    };
+  }
+
   return {
     config: { allowRevive, decayTickSeconds },
     getState: snapshot,
     ingest,
-    decay
+    decay,
+    restart
   };
 }

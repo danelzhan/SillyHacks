@@ -1,4 +1,4 @@
-# Scrollagotchi API
+# Doomagotchi API
 
 Base URL: `http://localhost:8787`
 
@@ -10,7 +10,7 @@ Base URL: `http://localhost:8787`
 ```json
 {
   "ok": true,
-  "service": "scrollagotchi-backend",
+  "service": "doomagotchi-backend",
   "port": 8787,
   "events": 12
 }

@@ -4,9 +4,9 @@ const SPRITE_THRESHOLDS = [
   { min: 81, img: "assets/dog_happy.png" },
   { min: 61, img: "assets/dog_sleep.png" },
   { min: 41, img: "assets/dog_confused.png" },
-  { min: 21, img: "assets/dogtear.png" },
-  { min: 1,  img: "assets/dogghost.png" },
-  { min: 0,  img: "assets/dogdead.png" },
+  { min: 21, img: "assets/dog_tear.png" },
+  { min: 1,  img: "assets/dog_ghost.png" },
+  { min: 0,  img: "assets/dog_gravestone.png" },
 ];
 let currentSprite = null;
 

@@ -68,14 +68,14 @@ export function createPetEngine(config = {}) {
   }
 
   function applyDelta(delta, eventCollector, triggerEvent = null) {
-    const previousStatus = state.status;
+    if (!allowRevive && state.status === PET_STATUS.DEAD) return;
+
     const previousSpriteTier = state.spriteTier;
     state.health = clampHealth(state.health + delta);
     state.lastEventAt = nowIso();
     const nextStatus = statusFromHealth(state.health);
     const nextSpriteTier = getSpriteTierForHealth(state.health);
 
-    if (previousStatus === PET_STATUS.DEAD && delta <= 0) return;
     transitionStatus(nextStatus, eventCollector);
 
     if (previousSpriteTier !== nextSpriteTier) {

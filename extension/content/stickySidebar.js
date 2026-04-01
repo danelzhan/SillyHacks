@@ -6,9 +6,9 @@
     { min: 81, img: "dog_happy.png" },
     { min: 61, img: "dog_sleep.png" },
     { min: 41, img: "dog_confused.png" },
-    { min: 21, img: "dogtear.png" },
-    { min: 1,  img: "dogghost.png" },
-    { min: 0,  img: "dogdead.png" },
+    { min: 21, img: "dog_tear.png" },
+    { min: 1,  img: "dog_ghost.png" },
+    { min: 0,  img: "dog_gravestone.png" },
   ];
 
   let segEls = [];
@@ -45,7 +45,7 @@
     mounted = true;
 
     const root = document.createElement("div");
-    root.id = "scrollagotchi-sidebar-root";
+    root.id = "doomagotchi-sidebar-root";
 
     let segsHTML = "";
     for (let i = 0; i < TOTAL_SEGS; i++) segsHTML += `<div class="sg-seg" id="sg-seg-${i}"></div>`;
@@ -123,7 +123,7 @@
       <div id="sg-sidebar">
         <button class="sg-toggle" id="sg-toggle">PET</button>
         <div class="sg-shell"><div class="sg-inner">
-          <div class="sg-title">SCROLLAGOTCHI</div>
+          <div class="sg-title">DOOMAGOTCHI</div>
           <div class="sg-bar">
             <span class="sg-bar-label">HP</span>
             <div class="sg-segs">${segsHTML}</div>

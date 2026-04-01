@@ -9,7 +9,7 @@ function buildStatusMessage({ pet, event, note } = {}) {
   const domain = event?.domain ? ` @ ${event.domain}` : "";
   const suffix = note ? ` Note: ${note}.` : "";
 
-  return `Scrollagotchi status is ${status} at ${health}%. Latest event: ${eventType}${domain}.${suffix}`;
+  return `Doomagotchi status is ${status} at ${health}%. Latest event: ${eventType}${domain}.${suffix}`;
 }
 
 export function createTwilioNotifier(config = {}) {

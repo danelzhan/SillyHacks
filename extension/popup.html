@@ -7,37 +7,55 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main>
-      <h1>Scrollagotchi</h1>
-      <p id="backendStatus">Backend: checking...</p>
-      <section class="card">
-        <h2>Config</h2>
-        <label class="row">
-          <input id="sidebarEnabled" type="checkbox" />
-          <span>Show health sidebar</span>
-        </label>
-        <label class="row">
-          <input id="trackTabActivity" type="checkbox" />
-          <span>Track tab active events</span>
-        </label>
-        <label class="row">
-          <input id="trackIdleHeartbeat" type="checkbox" />
-          <span>Track idle heartbeat events</span>
-        </label>
-        <label class="row">
-          <input id="trackReelsScroll" type="checkbox" />
-          <span>Track Reels scroll events</span>
-        </label>
-      </section>
-      <section class="card">
-        <h2>Twilio</h2>
-        <button id="testTwilioBtn" class="ghost" type="button">Test Twilio SMS</button>
-        <p id="twilioStatus" class="status">Ready to test.</p>
-      </section>
-      <h2>Recent events</h2>
-      <button id="clearEventsBtn" class="ghost" type="button">Clear logs</button>
-      <ul id="eventList"></ul>
-    </main>
+    <div class="device">
+      <div class="device-inner">
+
+        <div class="top-bar">
+          <div id="statusBadge" class="status-badge">OFF</div>
+          <div class="title-block">
+            <span class="title-label">SCROLLAGOTCHI</span>
+            <div class="title-sub">control panel</div>
+          </div>
+          <div style="width:36px"></div>
+        </div>
+
+        <!-- config -->
+        <div class="panel">
+          <div class="panel-title">Config</div>
+          <label class="config-row">
+            <input id="trackTabActivity" type="checkbox" />
+            <span>Track tab activity</span>
+          </label>
+          <label class="config-row">
+            <input id="trackIdleHeartbeat" type="checkbox" />
+            <span>Track idle heartbeat</span>
+          </label>
+          <label class="config-row">
+            <input id="trackReelsScroll" type="checkbox" />
+            <span>Track Reels scroll</span>
+          </label>
+        </div>
+
+        <!-- twilio -->
+        <div class="panel" style="margin-top:6px">
+          <div class="panel-title">Twilio</div>
+          <button id="testTwilioBtn" class="clear-btn" type="button">Test SMS</button>
+          <p id="twilioStatus" class="twilio-status">Ready to test.</p>
+        </div>
+
+        <!-- events -->
+        <div class="panel" style="margin-top:6px">
+          <div class="panel-header">
+            <div class="panel-title">Recent events</div>
+            <button id="clearEventsBtn" class="clear-btn" type="button">clear</button>
+          </div>
+          <ul id="eventList" class="event-list">
+            <li>No events yet.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

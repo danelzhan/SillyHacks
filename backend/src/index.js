@@ -16,7 +16,7 @@ const STORE_FULL_URL = (process.env.STORE_FULL_URL ?? "false").toLowerCase() ===
 
 const engine = createPetEngine({
   allowRevive: (process.env.ALLOW_REVIVE ?? "true").toLowerCase() === "true",
-  decayTickSeconds: Number(process.env.DECAY_TICK_SECONDS ?? 3),
+  decayTickSeconds: Number(process.env.DECAY_TICK_SECONDS ?? 1),
   initialHealth: Number(process.env.INITIAL_HEALTH ?? 50)
 });
 

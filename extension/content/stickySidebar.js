@@ -1,185 +1,170 @@
 (function () {
   if (window.top !== window) return;
-  let sidebarEnabled = true;
-  let root = null;
-  let sidebar = null;
-  let toggle = null;
-  let healthEl = null;
-  let statusEl = null;
-  let backendEl = null;
-  let fillEl = null;
 
-  function ensureSidebarMounted() {
-    if (document.getElementById("scrollagotchi-sidebar-root")) return;
-    root = document.createElement("div");
+  const TOTAL_SEGS = 10;
+  let segEls = [];
+  let healthValEl = null;
+  let msgEl = null;
+  let sidebarEl = null;
+  let mounted = false;
+
+  let pet = null;
+  let recentEvents = [];
+
+  function buildMessage() {
+    if (!pet) return "connecting...";
+    if (pet.status === "dead") return "i died...";
+    if (pet.status === "critical") return "i'm fading...";
+    const latest = recentEvents[0];
+    if (latest) {
+      if (latest.type === "reels_scroll") return "nom nom scrolls...";
+      if (latest.type === "tab_active" && latest.domainClass === "good")
+        return `${latest.domain}... ow...`;
+      if (latest.type === "tab_active" && latest.domainClass === "bad")
+        return "doom scroll for me...";
+      if (latest.type === "decay_tick") return "hungry...";
+    }
+    return "feed me scrolls...";
+  }
+
+  function mount() {
+    if (mounted) return;
+    mounted = true;
+
+    const root = document.createElement("div");
     root.id = "scrollagotchi-sidebar-root";
+
+    let segsHTML = "";
+    for (let i = 0; i < TOTAL_SEGS; i++) segsHTML += `<div class="sg-seg" id="sg-seg-${i}"></div>`;
+
     root.innerHTML = `
       <style>
-        #scrollagotchi-sidebar {
-          position: fixed;
-          top: 88px;
-          right: 0;
-          z-index: 2147483647;
-          width: 260px;
-          font-family: Arial, sans-serif;
-          color: #e2e8f0;
-          transition: transform 0.2s ease;
+        @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+        #sg-sidebar {
+          position: fixed; top: 72px; right: 0; z-index: 2147483647;
+          width: 220px; font-family: 'Silkscreen', monospace;
+          transition: transform .2s ease;
         }
-        #scrollagotchi-sidebar.collapsed {
-          transform: translateX(228px);
+        #sg-sidebar.collapsed { transform: translateX(188px); }
+        #sg-sidebar .sg-shell {
+          border: 3px solid #2a4f52; border-right: 0;
+          border-radius: 16px 0 0 16px; background: #3b6b6b;
+          padding: 2px; box-shadow: 0 6px 18px rgba(0,0,0,.3);
         }
-        #scrollagotchi-sidebar .panel {
-          background: #020617;
-          border: 1px solid #1e293b;
-          border-right: 0;
-          border-radius: 10px 0 0 10px;
-          padding: 10px;
-          box-shadow: 0 8px 20px rgba(2, 6, 23, 0.45);
+        #sg-sidebar .sg-inner {
+          background: #7ecec8; border-radius: 13px 0 0 13px; padding: 10px;
         }
-        #scrollagotchi-sidebar .title {
-          font-size: 12px;
-          font-weight: 700;
-          margin-bottom: 8px;
+        #sg-sidebar .sg-title {
+          text-align: center; font-size: 7px; font-weight: 700;
+          color: #2a4f52; margin-bottom: 6px; letter-spacing: 1px;
         }
-        #scrollagotchi-sidebar .health-value {
-          font-size: 28px;
-          font-weight: 700;
-          line-height: 1;
-          margin: 2px 0 8px;
+        #sg-sidebar .sg-bar {
+          display: flex; align-items: center; gap: 3px;
+          background: #fff; border: 2px solid #2a4f52;
+          border-radius: 6px; padding: 4px 6px;
         }
-        #scrollagotchi-sidebar .line {
-          font-size: 12px;
-          margin: 4px 0;
+        #sg-sidebar .sg-bar-label {
+          font-size: 7px; font-weight: 700; color: #1e293b; margin-right: 2px;
         }
-        #scrollagotchi-sidebar .bar {
-          height: 8px;
-          background: #1e293b;
-          border-radius: 999px;
-          overflow: hidden;
-          margin-top: 8px;
+        #sg-sidebar .sg-segs { display: flex; gap: 2px; flex: 1; }
+        .sg-seg {
+          width: 10px; height: 12px; border-radius: 1px; background: #d1d5db;
         }
-        #scrollagotchi-sidebar .fill {
-          height: 100%;
-          width: 0%;
-          background: #38bdf8;
-          transition: width 0.15s ease;
+        .sg-seg.on { background: #5ec6c0; }
+        .sg-seg.on.warn { background: #f59e0b; }
+        .sg-seg.on.crit { background: #ef4444; }
+        #sg-sidebar .sg-val {
+          font-size: 7px; font-weight: 700; color: #1e293b;
+          margin-left: auto; white-space: nowrap;
         }
-        #scrollagotchi-sidebar .toggle {
-          position: absolute;
-          left: -30px;
-          top: 12px;
-          border: none;
-          width: 30px;
-          height: 76px;
-          border-radius: 8px 0 0 8px;
-          background: #0f172a;
-          color: #e2e8f0;
-          cursor: pointer;
-          font-size: 11px;
-          writing-mode: vertical-rl;
-          text-orientation: mixed;
+        #sg-sidebar .sg-viewport {
+          margin-top: 6px; height: 80px; background: #e8e4d4;
+          border: 2px solid #2a4f52; border-radius: 6px;
+          background-image: repeating-linear-gradient(
+            0deg, transparent, transparent 3px,
+            rgba(0,0,0,.03) 3px, rgba(0,0,0,.03) 4px
+          );
         }
+        #sg-sidebar .sg-msg {
+          margin-top: 6px; background: #fff; border: 2px solid #2a4f52;
+          border-radius: 6px; padding: 6px 8px; font-size: 7px;
+          color: #1e293b; line-height: 1.5; min-height: 28px;
+        }
+        #sg-sidebar .sg-toggle {
+          position: absolute; left: -24px; top: 10px;
+          border: 2px solid #2a4f52; border-right: 0;
+          width: 24px; height: 60px; border-radius: 6px 0 0 6px;
+          background: #3b6b6b; color: #e2e8f0; cursor: pointer;
+          font-family: 'Silkscreen', monospace; font-size: 7px;
+          writing-mode: vertical-rl; text-orientation: mixed;
+          display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+        #sg-sidebar .sg-toggle:hover { background: #4a7a7a; }
       </style>
-      <div id="scrollagotchi-sidebar">
-        <button id="scrollagotchi-toggle" class="toggle">Scrollagotchi</button>
-        <div class="panel">
-          <div class="title">Health</div>
-          <div id="scrollagotchi-health" class="health-value">--</div>
-          <div class="line">Status: <strong id="scrollagotchi-status">unknown</strong></div>
-          <div class="line">Backend: <strong id="scrollagotchi-backend">offline</strong></div>
-          <div class="bar"><div id="scrollagotchi-fill" class="fill"></div></div>
-        </div>
+      <div id="sg-sidebar">
+        <button class="sg-toggle" id="sg-toggle">PET</button>
+        <div class="sg-shell"><div class="sg-inner">
+          <div class="sg-title">SCROLLAGOTCHI</div>
+          <div class="sg-bar">
+            <span class="sg-bar-label">HP</span>
+            <div class="sg-segs">${segsHTML}</div>
+            <span class="sg-val" id="sg-health-val">--</span>
+          </div>
+          <div class="sg-viewport"></div>
+          <div class="sg-msg" id="sg-msg">connecting...</div>
+        </div></div>
       </div>
     `;
 
     document.documentElement.appendChild(root);
-    sidebar = document.getElementById("scrollagotchi-sidebar");
-    toggle = document.getElementById("scrollagotchi-toggle");
-    healthEl = document.getElementById("scrollagotchi-health");
-    statusEl = document.getElementById("scrollagotchi-status");
-    backendEl = document.getElementById("scrollagotchi-backend");
-    fillEl = document.getElementById("scrollagotchi-fill");
-    toggle.addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
+    sidebarEl = document.getElementById("sg-sidebar");
+    healthValEl = document.getElementById("sg-health-val");
+    msgEl = document.getElementById("sg-msg");
+    segEls = [];
+    for (let i = 0; i < TOTAL_SEGS; i++) segEls.push(document.getElementById(`sg-seg-${i}`));
+    document.getElementById("sg-toggle").addEventListener("click", () => {
+      sidebarEl.classList.toggle("collapsed");
     });
   }
 
-  function unmountSidebar() {
-    const existing = document.getElementById("scrollagotchi-sidebar-root");
-    if (existing) existing.remove();
-    root = null;
-    sidebar = null;
-    toggle = null;
-    healthEl = null;
-    statusEl = null;
-    backendEl = null;
-    fillEl = null;
-  }
+  function render() {
+    mount();
+    const health = Math.max(0, Math.min(100, Number(pet?.health ?? 0)));
+    const filled = Math.round((health / 100) * TOTAL_SEGS);
 
-  function fillColor(health) {
-    if (health <= 20) return "#ef4444";
-    if (health <= 50) return "#f59e0b";
-    return "#38bdf8";
-  }
-
-  function render(data) {
-    if (!sidebarEnabled) {
-      unmountSidebar();
-      return;
-    }
-    ensureSidebarMounted();
-
-    const pet = data?.pet ?? null;
-    const backendOnline = Boolean(data?.backendOnline);
-
-    if (!pet) {
-      healthEl.textContent = "--";
-      statusEl.textContent = "unknown";
-      fillEl.style.width = "0%";
-    } else {
-      const health = Math.max(0, Math.min(100, Number(pet.health ?? 0)));
-      healthEl.textContent = String(health);
-      statusEl.textContent = pet.status ?? "unknown";
-      fillEl.style.width = `${health}%`;
-      fillEl.style.background = fillColor(health);
-    }
-
-    backendEl.textContent = backendOnline ? "online" : "offline";
-  }
-
-  async function refreshBackendStatus() {
-    if (!sidebarEnabled) return;
-    try {
-      const response = await chrome.runtime.sendMessage({ type: "backend_health_ping" });
-      if (response && typeof response.online === "boolean" && backendEl) {
-        backendEl.textContent = response.online ? "online" : "offline";
+    for (let i = 0; i < TOTAL_SEGS; i++) {
+      if (i < filled) {
+        let cls = "sg-seg on";
+        if (health <= 20) cls += " crit";
+        else if (health <= 50) cls += " warn";
+        segEls[i].className = cls;
+      } else {
+        segEls[i].className = "sg-seg";
       }
+    }
+    healthValEl.textContent = `${health}`;
+    msgEl.textContent = buildMessage();
+  }
+
+  // ── connect to background via port ──
+
+  function connect() {
+    try {
+      const port = chrome.runtime.connect({ name: "sidebar" });
+      port.onMessage.addListener((msg) => {
+        if (msg.type === "state") {
+          pet = msg.pet;
+          recentEvents = msg.recentEvents ?? [];
+          render();
+        }
+      });
+      port.onDisconnect.addListener(() => {
+        setTimeout(connect, 2000);
+      });
     } catch {
-      // Ignore transient extension worker wake/reload failures.
+      setTimeout(connect, 2000);
     }
   }
 
-  chrome.storage.local
-    .get({ pet: null, backendOnline: false, sidebarEnabled: true })
-    .then((data) => {
-      sidebarEnabled = Boolean(data.sidebarEnabled);
-      render(data);
-      refreshBackendStatus();
-    })
-    .catch(() => {});
-
-  chrome.storage.onChanged.addListener((changes) => {
-    const patch = {};
-    if (changes.pet) patch.pet = changes.pet.newValue;
-    if (changes.backendOnline) patch.backendOnline = changes.backendOnline.newValue;
-    if (changes.sidebarEnabled) {
-      sidebarEnabled = Boolean(changes.sidebarEnabled.newValue);
-      patch.sidebarEnabled = sidebarEnabled;
-    }
-    if (Object.keys(patch).length > 0) render(patch);
-  });
-
-  setInterval(() => {
-    refreshBackendStatus();
-  }, 1000);
+  connect();
 })();

@@ -1,36 +1,38 @@
-const API_BASE = "http://localhost:8787/api";
+const API_BASES = ["http://127.0.0.1:8787/api", "http://localhost:8787/api"];
+
+async function requestWithFallback(path, options) {
+  let lastError;
+  for (const base of API_BASES) {
+    try {
+      const response = await fetch(`${base}${path}`, options);
+      if (!response.ok) {
+        lastError = new Error(`Request failed: ${response.status}`);
+        continue;
+      }
+      return response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error("Backend request failed.");
+}
 
 export async function getHealth() {
-  const response = await fetch(`${API_BASE}/health`);
-  if (!response.ok) throw new Error("Failed to fetch health.");
-  return response.json();
+  return requestWithFallback("/health");
 }
 
 export async function getPet() {
-  const response = await fetch(`${API_BASE}/pet`);
-  if (!response.ok) throw new Error("Failed to fetch pet state.");
-  return response.json();
+  return requestWithFallback("/pet");
 }
 
 export async function getEvents(limit = 50) {
-  const response = await fetch(`${API_BASE}/events?limit=${limit}`);
-  if (!response.ok) throw new Error("Failed to fetch events.");
-  return response.json();
+  return requestWithFallback(`/events?limit=${limit}`);
 }
 
 export async function sendStatusNotification(note = "") {
-  const response = await fetch(`${API_BASE}/notifications/status`, {
+  return requestWithFallback("/notifications/status", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ note })
   });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error || "Failed to send status notification.");
-  }
-
-  return payload;
 }

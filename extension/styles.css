@@ -1,77 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  margin: 0;
-  background: #020617;
-  color: #e2e8f0;
-  font-family: Arial, sans-serif;
+  width: 340px;
+  background: #fdf2f0;
+  font-family: 'Silkscreen', monospace;
+  color: #1e293b;
 }
 
-main {
-  width: 320px;
+.device {
+  margin: 8px;
+  border: 3px solid #2a4f52;
+  border-radius: 20px;
+  background: #3b6b6b;
+  padding: 2px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+
+.device-inner {
+  background: #7ecec8;
+  border-radius: 17px;
   padding: 12px;
 }
 
-h1 {
-  margin: 0 0 8px;
-  font-size: 18px;
-}
-
-h2 {
-  margin: 12px 0 8px;
-  font-size: 14px;
-}
-
-.card {
-  background: #0f172a;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-#backendStatus {
-  margin: 0 0 8px;
-  font-size: 12px;
-}
-
-.row {
+.top-bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0;
-  font-size: 12px;
-}
-
-.ghost {
-  border: 1px solid #334155;
-  background: transparent;
-  color: #cbd5e1;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 11px;
-  cursor: pointer;
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.ghost:hover {
-  background: #0f172a;
+.status-badge {
+  background: #f8c4c0;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 8px;
+  font-weight: 700;
+}
+.status-badge.online { background: #a7f3d0; }
+
+.title-block { text-align: center; }
+
+.title-label {
+  display: inline-block;
+  background: #2a4f52;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
-.status {
-  margin: 8px 0 0;
-  font-size: 11px;
-  color: #94a3b8;
+.title-sub {
+  margin-top: 2px;
+  font-size: 7px;
+  color: #2a4f52;
 }
 
-#eventList {
+.panel {
+  background: #fff;
+  border: 2px solid #2a4f52;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-title {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #2a4f52;
+  margin-bottom: 4px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0;
+  font-size: 8px;
+  cursor: pointer;
+}
+
+.config-row input[type="checkbox"] {
+  accent-color: #5ec6c0;
+  width: 13px;
+  height: 13px;
+}
+
+.clear-btn {
+  font-family: 'Silkscreen', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  background: #f8c4c0;
+  border: 1px solid #2a4f52;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: #2a4f52;
+}
+.clear-btn:hover { background: #f1aeaa; }
+.clear-btn:disabled { opacity: .5; cursor: default; }
+
+.twilio-status {
+  margin-top: 4px;
+  font-size: 7px;
+  color: #64748b;
+}
+
+.event-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 220px;
-  overflow: auto;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 4px;
 }
 
-#eventList li {
-  margin-bottom: 6px;
-  border-radius: 6px;
-  background: #111827;
-  padding: 6px;
-  font-size: 12px;
+.event-list li {
+  font-size: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 3px;
+  background: #e8e4d4;
+  line-height: 1.4;
+}
+
+.event-list li small {
+  color: #64748b;
+  font-size: 7px;
 }

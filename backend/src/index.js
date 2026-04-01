@@ -63,7 +63,10 @@ app.use(
 );
 app.use("/api/pet", createPetRouter({ engine }));
 
-setInterval(() => {
+const DECAY_MS = engine.config.decayTickSeconds * 1000;
+let nextDecay = Date.now() + DECAY_MS;
+
+function decayTick() {
   const decayEvent = engine.decay((sideEvent) => {
     store.add(sideEvent);
     wsHub.broadcast({ type: "event", payload: sideEvent });
@@ -73,7 +76,12 @@ setInterval(() => {
     wsHub.broadcast({ type: "event", payload: decayEvent });
     wsHub.broadcast({ type: "pet_state", payload: engine.getState() });
   }
-}, engine.config.decayTickSeconds * 1000);
+  nextDecay += DECAY_MS;
+  const drift = nextDecay - Date.now();
+  setTimeout(decayTick, Math.max(0, drift));
+}
+
+setTimeout(decayTick, DECAY_MS);
 
 server.listen(PORT, () => {
   console.log(`Scrollagotchi backend listening at http://localhost:${PORT}`);

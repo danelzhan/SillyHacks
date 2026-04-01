@@ -16,10 +16,24 @@ const BAD_DOMAINS = [
 const GOOD_DOMAINS = [
   "developer.mozilla.org",
   "docs.google.com",
+  "drive.google.com",
   "github.com",
   "stackoverflow.com",
   "notion.so",
-  "linear.app"
+  "linear.app",
+  "figma.com",
+  "slack.com",
+  "teams.microsoft.com",
+  "outlook.com",
+  "mail.google.com",
+  "calendar.google.com",
+  "jira.atlassian.com",
+  "confluence.atlassian.com",
+  "leetcode.com",
+  "kaggle.com",
+  "coursera.org",
+  "udemy.com",
+  "wikipedia.org"
 ];
 
 export function classifyDomain(domain = "") {
@@ -32,8 +46,9 @@ export function classifyDomain(domain = "") {
 
 export function getHealthDeltaForEvent(event) {
   if (!event) return 0;
-  if (event.type === EVENT_TYPES.REELS_SCROLL) return 1;
-  if (event.type === EVENT_TYPES.TAB_ACTIVE && event.domainClass === DOMAIN_CLASS.BAD) return 5;
+  if (event.type === EVENT_TYPES.REELS_SCROLL) return 5;
+  if (event.type === EVENT_TYPES.TAB_ACTIVE && event.domainClass === DOMAIN_CLASS.BAD) return 10;
+  if (event.type === EVENT_TYPES.TAB_ACTIVE && event.domainClass === DOMAIN_CLASS.GOOD) return -5;
   return 0;
 }
 

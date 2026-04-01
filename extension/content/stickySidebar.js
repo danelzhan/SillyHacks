@@ -10,6 +10,8 @@
 
   let pet = null;
   let recentEvents = [];
+  let displayedHealth = -1;
+  let animFrame = null;
 
   function buildMessage() {
     if (!pet) return "connecting...";
@@ -127,11 +129,8 @@
     });
   }
 
-  function render() {
-    mount();
-    const health = Math.max(0, Math.min(100, Number(pet?.health ?? 0)));
+  function renderBar(health) {
     const filled = Math.round((health / 100) * TOTAL_SEGS);
-
     for (let i = 0; i < TOTAL_SEGS; i++) {
       if (i < filled) {
         let cls = "sg-seg on";
@@ -142,7 +141,28 @@
         segEls[i].className = "sg-seg";
       }
     }
-    healthValEl.textContent = `${health}`;
+  }
+
+  function animateHealth(target) {
+    if (animFrame) clearInterval(animFrame);
+    if (displayedHealth === -1) displayedHealth = target;
+    if (displayedHealth === target) {
+      healthValEl.textContent = `${target}`;
+      return;
+    }
+    animFrame = setInterval(() => {
+      if (displayedHealth < target) displayedHealth++;
+      else if (displayedHealth > target) displayedHealth--;
+      healthValEl.textContent = `${displayedHealth}`;
+      if (displayedHealth === target) clearInterval(animFrame);
+    }, 30);
+  }
+
+  function render() {
+    mount();
+    const health = Math.max(0, Math.min(100, Number(pet?.health ?? 0)));
+    renderBar(health);
+    animateHealth(health);
     msgEl.textContent = buildMessage();
   }
 

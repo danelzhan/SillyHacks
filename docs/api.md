@@ -91,6 +91,31 @@ Base URL: `http://localhost:8787`
 }
 ```
 
+## Status notification
+
+- `POST /api/notifications/status`
+- Sends a manual SMS through the Twilio helper.
+- Optional request body:
+
+```json
+{
+  "note": "optional text that is appended to the message"
+}
+```
+
+- Success response:
+
+```json
+{
+  "ok": true,
+  "configured": true,
+  "sent": true,
+  "sid": "SMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+```
+
+- Returns `503` if Twilio is not configured.
+
 ## WebSocket
 
 - `ws://localhost:8787/ws`

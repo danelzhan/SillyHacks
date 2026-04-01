@@ -1,6 +1,8 @@
 const backendStatusEl = document.getElementById("backendStatus");
 const eventListEl = document.getElementById("eventList");
 const clearEventsBtn = document.getElementById("clearEventsBtn");
+const testTwilioBtn = document.getElementById("testTwilioBtn");
+const twilioStatusEl = document.getElementById("twilioStatus");
 const sidebarEnabledEl = document.getElementById("sidebarEnabled");
 const trackTabActivityEl = document.getElementById("trackTabActivity");
 const trackIdleHeartbeatEl = document.getElementById("trackIdleHeartbeat");
@@ -24,6 +26,31 @@ async function checkBackendOnline() {
     }
   }
   return false;
+}
+
+async function sendTwilioTest() {
+  for (const base of API_BASES) {
+    try {
+      const response = await fetch(`${base}/notifications/status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note: "popup test" })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || `Twilio test failed with status ${response.status}.`);
+      }
+
+      return payload;
+    } catch (error) {
+      if (base === API_BASES[API_BASES.length - 1]) throw error;
+    }
+  }
+
+  throw new Error("All backend endpoints failed.");
 }
 
 function renderEvents(events) {
@@ -75,6 +102,21 @@ bindToggle(trackReelsScrollEl, "trackReelsScroll");
 clearEventsBtn.addEventListener("click", async () => {
   await chrome.storage.local.set({ recentEvents: [] });
   renderEvents([]);
+});
+
+testTwilioBtn.addEventListener("click", async () => {
+  testTwilioBtn.disabled = true;
+  twilioStatusEl.textContent = "Sending test SMS...";
+  try {
+    const payload = await sendTwilioTest();
+    twilioStatusEl.textContent = payload.configured
+      ? "Twilio test sent."
+      : "Twilio is not configured.";
+  } catch (error) {
+    twilioStatusEl.textContent = error?.message ?? "Twilio test failed.";
+  } finally {
+    testTwilioBtn.disabled = false;
+  }
 });
 
 chrome.storage.onChanged.addListener(() => {

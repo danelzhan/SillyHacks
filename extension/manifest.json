@@ -7,14 +7,19 @@
   "host_permissions": [
     "http://localhost:8787/*",
     "http://127.0.0.1:8787/*",
-    "https://www.instagram.com/*"
+    "https://www.instagram.com/*",
+    "https://www.tiktok.com/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.instagram.com/reels/*", "https://www.instagram.com/*"],
+      "matches": [
+        "https://www.instagram.com/reels/*",
+        "https://www.instagram.com/*",
+        "https://www.tiktok.com/*"
+      ],
       "js": ["content/instagramReels.js"],
       "run_at": "document_idle"
     },

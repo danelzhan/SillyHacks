@@ -2,7 +2,7 @@
 
 Scrollagotchi is a Chrome-extension-first MVP where a pet dies if you stop scrolling.
 
-- Extension captures active tab activity and Instagram Reels scroll signals.
+- Extension captures active tab activity and short-form scroll signals from Instagram and TikTok.
 - Backend applies feed/decay rules and maintains pet health/state.
 - React dashboard observes pet status and event logs in real-time.
 

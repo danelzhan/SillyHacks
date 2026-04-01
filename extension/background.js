@@ -220,7 +220,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       type: "reels_scroll",
       source: "extension_content",
       url: message.url ?? "",
-      domain: "instagram.com",
+      domain: message.domain ?? "instagram.com",
       meta: { bucket: message.bucket ?? "low", perMinute: message.perMinute ?? 0 }
     };
 

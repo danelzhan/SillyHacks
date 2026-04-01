@@ -1,9 +1,22 @@
 (function () {
+  const TRACKED_HOSTS = new Set(["instagram.com", "tiktok.com"]);
   const EMIT_WINDOW_MS = 250;
   const GESTURE_IDLE_MS = 120;
   let scrollCount = 0;
   let timerStarted = false;
   let lastWheelAt = 0;
+
+  function getDomain() {
+    try {
+      return window.location.hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  }
+
+  function isTrackedShortFormSite() {
+    return TRACKED_HOSTS.has(getDomain());
+  }
 
   function bucketFromRate(rate) {
     if (rate >= 30) return "high";
@@ -12,6 +25,7 @@
   }
 
   function emit() {
+    if (!isTrackedShortFormSite()) return;
     if (scrollCount <= 0) return;
     if (Date.now() - lastWheelAt < GESTURE_IDLE_MS) return;
 
@@ -24,6 +38,7 @@
     const payload = {
       type: "reels_scroll_signal",
       url: window.location.href,
+      domain: getDomain(),
       perMinute,
       bucket: bucketFromRate(perMinute)
     };
@@ -50,7 +65,7 @@
   window.addEventListener(
     "wheel",
     (event) => {
-      if (!window.location.href.includes("/reels")) return;
+      if (!isTrackedShortFormSite()) return;
       if (Math.abs(Number(event.deltaY ?? 0)) < 1) return;
       scrollCount += 1;
       lastWheelAt = Date.now();

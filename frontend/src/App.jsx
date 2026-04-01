@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PetHealthCard from "./components/PetHealthCard.jsx";
 import EventLogList from "./components/EventLogList.jsx";
-import { getEvents, getHealth, getPet } from "./lib/api.js";
+import { getEvents, getHealth, getPet, sendStatusNotification } from "./lib/api.js";
 import { connectWs } from "./lib/ws.js";
 
 function classCounts(events) {
@@ -21,6 +21,10 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [backendOnline, setBackendOnline] = useState(false);
   const [error, setError] = useState("");
+  const [notificationState, setNotificationState] = useState({
+    sending: false,
+    message: ""
+  });
 
   useEffect(() => {
     async function bootstrap() {
@@ -59,6 +63,22 @@ export default function App() {
 
   const counts = useMemo(() => classCounts(events), [events]);
 
+  async function handleSendNotification() {
+    setNotificationState({ sending: true, message: "" });
+    try {
+      await sendStatusNotification();
+      setNotificationState({
+        sending: false,
+        message: "SMS sent."
+      });
+    } catch (err) {
+      setNotificationState({
+        sending: false,
+        message: err?.message ?? "Failed to send SMS."
+      });
+    }
+  }
+
   return (
     <div className="mx-auto min-h-screen max-w-5xl p-6">
       <header className="mb-6 flex items-center justify-between">
@@ -86,6 +106,17 @@ export default function App() {
           <p className="text-xs uppercase text-slate-400">Latest Event</p>
           <p className="mt-2 text-sm">
             {events[0]?.type ?? "none"} {events[0]?.domain ? `• ${events[0].domain}` : ""}
+          </p>
+          <button
+            type="button"
+            onClick={handleSendNotification}
+            disabled={!backendOnline || notificationState.sending}
+            className="mt-4 rounded bg-sky-600 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-700"
+          >
+            {notificationState.sending ? "Sending..." : "Send status SMS"}
+          </button>
+          <p className="mt-2 text-xs text-slate-400">
+            {notificationState.message || "Manually trigger the Twilio helper for now."}
           </p>
         </div>
       </section>

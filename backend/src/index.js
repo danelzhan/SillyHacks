@@ -5,8 +5,10 @@ import { createServer } from "http";
 import { createEventStore } from "./state/eventStore.js";
 import { createPetEngine } from "./state/petEngine.js";
 import { createEventsRouter } from "./routes/events.js";
+import { createNotificationsRouter } from "./routes/notifications.js";
 import { createPetRouter } from "./routes/pet.js";
 import { createWsHub } from "./ws/hub.js";
+import { createTwilioNotifier } from "./services/twilioNotifier.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const EVENT_LOG_LIMIT = Number(process.env.EVENT_LOG_LIMIT ?? 500);
@@ -19,6 +21,7 @@ const engine = createPetEngine({
 });
 
 const store = createEventStore(EVENT_LOG_LIMIT);
+const notifier = createTwilioNotifier();
 const app = express();
 app.use(cors({ origin: true, credentials: false }));
 app.use(express.json({ limit: "1mb" }));
@@ -47,6 +50,15 @@ app.use(
     engine,
     wsHub,
     storeFullUrl: STORE_FULL_URL
+  })
+);
+app.use(
+  "/api/notifications",
+  createNotificationsRouter({
+    engine,
+    notifier,
+    store,
+    wsHub
   })
 );
 app.use("/api/pet", createPetRouter({ engine }));

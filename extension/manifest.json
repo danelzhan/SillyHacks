@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Scrollagotchi",
+  "name": "Doomagotchi",
   "version": "0.1.0",
   "description": "A Tamagotchi that dies if you stop scrolling.",
   "permissions": ["tabs", "storage", "scripting"],
@@ -29,9 +29,13 @@
       "run_at": "document_idle"
     }
   ],
+  "icons": {
+    "128": "icon.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Scrollagotchi"
+    "default_title": "Doomagotchi",
+    "default_icon": "icon.png"
   },
   "web_accessible_resources": [
     {
@@ -39,9 +43,9 @@
         "assets/dog_happy.png",
         "assets/dog_sleep.png",
         "assets/dog_confused.png",
-        "assets/dogtear.png",
-        "assets/dogghost.png",
-        "assets/dogdead.png"
+        "assets/dog_tear.png",
+        "assets/dog_ghost.png",
+        "assets/dog_gravestone.png"
       ],
       "matches": ["http://*/*", "https://*/*"]
     }

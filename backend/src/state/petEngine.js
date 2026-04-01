@@ -16,7 +16,7 @@ function statusFromHealth(health) {
 }
 
 export function createPetEngine(config = {}) {
-  const allowRevive = config.allowRevive ?? true;
+  const allowRevive = config.allowRevive ?? false;
   const decayTickSeconds = Number(config.decayTickSeconds ?? 1);
   const initialHealth = Number(config.initialHealth ?? 50);
 
@@ -66,12 +66,11 @@ export function createPetEngine(config = {}) {
   }
 
   function applyDelta(delta, eventCollector) {
+    if (!allowRevive && state.status === PET_STATUS.DEAD) return;
     const previousStatus = state.status;
     state.health = clampHealth(state.health + delta);
     state.lastEventAt = nowIso();
     const nextStatus = statusFromHealth(state.health);
-
-    if (previousStatus === PET_STATUS.DEAD && delta <= 0) return;
     transitionStatus(nextStatus, eventCollector);
   }
 

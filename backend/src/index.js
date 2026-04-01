@@ -15,7 +15,7 @@ const EVENT_LOG_LIMIT = Number(process.env.EVENT_LOG_LIMIT ?? 500);
 const STORE_FULL_URL = (process.env.STORE_FULL_URL ?? "false").toLowerCase() === "true";
 
 const engine = createPetEngine({
-  allowRevive: (process.env.ALLOW_REVIVE ?? "true").toLowerCase() === "true",
+  allowRevive: (process.env.ALLOW_REVIVE ?? "false").toLowerCase() === "true",
   decayTickSeconds: Number(process.env.DECAY_TICK_SECONDS ?? 1),
   initialHealth: Number(process.env.INITIAL_HEALTH ?? 50)
 });
@@ -37,7 +37,7 @@ wsHub.attachBootstrap(() => ({
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    service: "scrollagotchi-backend",
+    service: "doomagotchi-backend",
     port: PORT,
     events: store.count()
   });
@@ -84,5 +84,5 @@ function decayTick() {
 setTimeout(decayTick, DECAY_MS);
 
 server.listen(PORT, () => {
-  console.log(`Scrollagotchi backend listening at http://localhost:${PORT}`);
+  console.log(`Doomagotchi backend listening at http://localhost:${PORT}`);
 });

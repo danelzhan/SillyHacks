@@ -145,7 +145,7 @@ export default function App() {
               </div>
               <div className="text-center">
                 <h1 className="rounded bg-shell-bezel px-4 py-1 text-sm font-bold tracking-widest text-white">
-                  SCROLLAGOTCHI
+                  DOOMAGOTCHI
                 </h1>
                 <p className="mt-1 text-[8px] text-shell-bezel">a pet that feeds on doom</p>
               </div>
